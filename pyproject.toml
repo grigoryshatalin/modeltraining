@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "modeltraining"
+version = "0.1.0"
+description = "AI-model-driven trading bot for a personal Alpaca account (paper by default)."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "alpaca-py>=0.33",
+    "anthropic>=0.69",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+]
+
+[project.optional-dependencies]
+openai = ["openai>=1.40"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+modeltraining = "modeltraining.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/modeltraining"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
