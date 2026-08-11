@@ -13,6 +13,7 @@ from ..context import MarketContext
 from ..data.market_data import MarketDataClient
 from ..risk.guardrails import RiskManager
 from . import brains, pricing
+from .leaderboard import DEFAULT_LEADERBOARD_PATH, write_leaderboard
 from .roster import Contestant, default_roster
 from .state import DEFAULT_STATE_PATH, ContestantState, TournamentState
 
@@ -20,9 +21,15 @@ log = logging.getLogger(__name__)
 
 
 class TournamentEngine:
-    def __init__(self, settings: Settings, state_path: Path = DEFAULT_STATE_PATH) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        state_path: Path = DEFAULT_STATE_PATH,
+        leaderboard_path: Path = DEFAULT_LEADERBOARD_PATH,
+    ) -> None:
         self._s = settings
         self._path = state_path
+        self._lb_path = leaderboard_path
         self._data = MarketDataClient(settings)
         # Risk limits scaled so only cash binds; keep no-shorting + confidence gate.
         self._risk = RiskManager(
@@ -53,6 +60,7 @@ class TournamentEngine:
             roster=roster,
         )
         state.save(self._path)
+        write_leaderboard(state, self._lb_path)
         return state
 
     def standings(self) -> TournamentState:
@@ -98,6 +106,7 @@ class TournamentEngine:
         state.day_index += 1
         eliminated = self._maybe_eliminate(state, force_eliminate)
         state.save(self._path)
+        write_leaderboard(state, self._lb_path)
 
         return {
             "day_index": state.day_index,

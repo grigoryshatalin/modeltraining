@@ -163,7 +163,7 @@ def _cmd_tournament(args: argparse.Namespace) -> int:
         state = engine.init(roster=roster, force=args.force)
         print(f"Initialized tournament: {len(state.contestants)} contestants, "
               f"${state.starting_capital:,.0f} each, symbols {','.join(state.symbols)}.")
-        print("Run a daily cycle with:  modeltraining tournament run")
+        print("Wrote leaderboard.json.  Run a daily cycle with:  modeltraining tournament run")
         return 0
 
     if args.tcmd == "run":
@@ -172,14 +172,39 @@ def _cmd_tournament(args: argparse.Namespace) -> int:
             return 1
         result = engine.run_day(force_eliminate=args.force_eliminate)
         _fmt_rows(engine.standings())
-        print(f"\nCycle complete. Real API spend this run: ${result['spend']:.3f}")
+        print(f"\nCycle complete. Real API spend this run: ${result['spend']:.3f}  "
+              f"(leaderboard.json updated)")
         if result.get("capped"):
             print("(daily spend cap was hit — some contestants were skipped)")
         if result["eliminated"]:
             print(f"Eliminated this week: {result['eliminated']}")
+        if args.publish:
+            _publish_leaderboard()
         return 0
 
     return 1
+
+
+def _publish_leaderboard() -> None:
+    """Commit + push just leaderboard.json so the hosted panel updates."""
+    import subprocess
+
+    try:
+        subprocess.run(["git", "add", "leaderboard.json"], check=True)
+        committed = subprocess.run(
+            ["git", "commit", "-m", "Update leaderboard"], capture_output=True, text=True
+        )
+        if committed.returncode != 0:
+            blob = committed.stdout + committed.stderr
+            if "nothing to commit" in blob:
+                print("Publish: leaderboard.json unchanged, nothing to push.")
+                return
+            print(f"Publish: commit failed:\n{blob.strip()}")
+            return
+        subprocess.run(["git", "push"], check=True)
+        print("Publish: pushed leaderboard.json to origin.")
+    except Exception as exc:  # network/auth/etc. — non-fatal
+        print(f"Publish failed: {exc}")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -212,6 +237,8 @@ def build_parser() -> argparse.ArgumentParser:
     t_run = tsub.add_parser("run", help="Run one daily decision cycle for all alive contestants")
     t_run.add_argument("--force-eliminate", action="store_true",
                        help="Eliminate the worst contestant now, ignoring the weekly schedule")
+    t_run.add_argument("--publish", action="store_true",
+                       help="git commit + push leaderboard.json after the run (updates the hosted panel)")
     p_tourn.set_defaults(func=_cmd_tournament)
 
     return parser

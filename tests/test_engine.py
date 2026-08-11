@@ -53,7 +53,7 @@ def _run(engine, monkeypatch, decision_by_id, mark=10.0):
 
 def test_full_cycle_buys_marks_and_persists(tmp_path, monkeypatch):
     path = tmp_path / "t.json"
-    engine = TournamentEngine(_settings(), state_path=path)
+    engine = TournamentEngine(_settings(), state_path=path, leaderboard_path=tmp_path / "lb.json")
     engine.init(roster=_roster())
 
     decisions = {
@@ -82,7 +82,7 @@ def test_full_cycle_buys_marks_and_persists(tmp_path, monkeypatch):
 
 def test_weekly_elimination_drops_worst_net(tmp_path, monkeypatch):
     path = tmp_path / "t.json"
-    engine = TournamentEngine(_settings(), state_path=path)
+    engine = TournamentEngine(_settings(), state_path=path, leaderboard_path=tmp_path / "lb.json")
     engine.init(roster=_roster())
 
     # buyer buys into a rising mark (gains); holder sits in cash (flat, minus API cost)
