@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     alpaca_secret_key: str = ""
     alpaca_paper: bool = True
 
+    # --- Alpaca Broker API (sandbox) — 10-account tournament ---
+    # Broker API key ID + secret (from the Alpaca Broker dashboard). Used to
+    # create / fund / trade the per-model sub-accounts.
+    client_id: str = ""
+    client_secret: str = ""
+    alpaca_broker_sandbox: bool = True
+
     # --- AI decision model ---
     ai_provider: str = "claude"  # "claude" | "openai"
     anthropic_api_key: str = ""  # optional; SDK also reads ANTHROPIC_API_KEY
@@ -61,6 +68,14 @@ class Settings(BaseSettings):
             raise RuntimeError(
                 "Alpaca credentials are not set. Copy .env.example to .env and set "
                 "ALPACA_API_KEY / ALPACA_SECRET_KEY (paper keys from app.alpaca.markets)."
+            )
+
+    def require_broker_keys(self) -> None:
+        """Raise a clear error if Alpaca Broker API credentials are missing."""
+        if not self.client_id or not self.client_secret:
+            raise RuntimeError(
+                "Alpaca Broker API credentials are not set. Set CLIENT_ID / CLIENT_SECRET "
+                "in .env (Broker API sandbox key + secret from the Alpaca Broker dashboard)."
             )
 
 

@@ -111,6 +111,36 @@ DEFAULT_ROSTER: list[Contestant] = [
             "support; trim into strength. Prefer patience to churn."
         ),
     ),
+    Contestant(
+        id="sonnet5-breakout",
+        provider="claude",
+        model="claude-sonnet-5",
+        research=False,
+        strategy=(
+            "Breakout trader. Buy when price clears the period high on strength; "
+            "stand aside in choppy, rangebound tape."
+        ),
+    ),
+    Contestant(
+        id="haiku45-meanrev",
+        provider="claude",
+        model="claude-haiku-4-5",
+        research=False,
+        strategy=(
+            "Mean-reversion trader. Buy sharp dips toward the period low, sell "
+            "into sharp rallies. Small, frequent, disciplined."
+        ),
+    ),
+    Contestant(
+        id="gpt56terra-momentum",
+        provider="openai",
+        model="gpt-5.6-terra",
+        research=False,
+        strategy=(
+            "Momentum trader. Ride whichever watchlist name has the strongest "
+            "recent trend; rotate as leadership changes."
+        ),
+    ),
 ]
 
 
