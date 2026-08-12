@@ -32,9 +32,12 @@ class Contestant:
 
 
 DEFAULT_ROSTER: list[Contestant] = [
-    # NOTE: Opus 5 (claude-opus-5) is intentionally left out for now — its
-    # thinking-on-by-default behavior burned tokens on simple decisions. Re-add
-    # it here once you're happy with the cost profile.
+    # NOTE: the priciest models are intentionally left out to control token
+    # spend — Opus 5 and Sonnet-5-style thinking-on-by-default burn tokens on
+    # simple decisions (thinking is disabled on decisions in brains.py), Fable 5
+    # can't disable thinking at all ($10/$50), and GPT-5.6 Sol is $5/$30. The two
+    # OpenAI entries use the cheap tiers (Terra $2/$12, Luna $0.20/$1.20). Re-add
+    # any of them here once you're happy with the cost profile.
     Contestant(
         id="opus48-macro",
         provider="claude",
@@ -89,20 +92,9 @@ DEFAULT_ROSTER: list[Contestant] = [
         ),
     ),
     Contestant(
-        id="fable5-quant",
-        provider="claude",
-        model="claude-fable-5",
-        research=False,
-        strategy=(
-            "Systematic / quantitative trader. Decide purely from the technical "
-            "signals (moving-average alignment, distance from highs/lows, recent "
-            "momentum); ignore narrative. Size consistently."
-        ),
-    ),
-    Contestant(
-        id="gpt56sol-momentum",
+        id="gpt56luna-momentum",
         provider="openai",
-        model="gpt-5.6-sol",
+        model="gpt-5.6-luna",
         research=False,
         strategy=(
             "Trend/momentum trader. Favor strength and moving-average alignment; "

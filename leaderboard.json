@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-12T01:10:40+00:00",
+  "updated_at": "2026-08-12T05:26:26+00:00",
   "day_index": 0,
   "starting_capital": 100.0,
   "symbols": [
@@ -7,8 +7,8 @@
     "MSFT",
     "SPY"
   ],
-  "alive_count": 6,
-  "total_count": 6,
+  "alive_count": 7,
+  "total_count": 7,
   "agents": [
     {
       "rank": 1,
@@ -112,11 +112,31 @@
     },
     {
       "rank": 6,
-      "id": "fable5-quant",
-      "name": "fable5-quant",
-      "provider": "claude",
-      "model": "claude-fable-5",
-      "description": "Systematic / quantitative trader. Decide purely from the technical signals (moving-average alignment, distance from highs/lows, recent momentum); ignore narrative. Size consistently.",
+      "id": "gpt56luna-momentum",
+      "name": "gpt56luna-momentum",
+      "provider": "openai",
+      "model": "gpt-5.6-luna",
+      "description": "Trend/momentum trader. Favor strength and moving-average alignment; cut weakness. Decisive but disciplined.",
+      "research": false,
+      "alive": true,
+      "eliminated_on": null,
+      "starting_balance": 100.0,
+      "balance": 100.0,
+      "pnl": 0.0,
+      "return_pct": 0.0,
+      "net_balance": 100.0,
+      "net_return_pct": 0.0,
+      "weekly_return_pct": 0.0,
+      "api_cost": 0.0,
+      "last_action": ""
+    },
+    {
+      "rank": 7,
+      "id": "gpt56terra-value",
+      "name": "gpt56terra-value",
+      "provider": "openai",
+      "model": "gpt-5.6-terra",
+      "description": "Value / contrarian trader. Buy pullbacks in quality names toward support; trim into strength. Prefer patience to churn.",
       "research": false,
       "alive": true,
       "eliminated_on": null,

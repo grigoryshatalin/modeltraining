@@ -170,7 +170,7 @@ Both share the same prompt (`ai/prompt.py`). To add another provider, implement
 
 ## Model tournament (experiment)
 
-A built-in competition where **8 contestants** each trade a simulated **$100
+A built-in competition where **7 contestants** each trade a simulated **$100
 book**, and the worst performer is eliminated weekly until one remains. Every
 contestant runs the *identical* setup — same watchlist, risk rules, starting
 capital, and prompt scaffold — so the only variables are the **model** and the
@@ -178,10 +178,11 @@ capital, and prompt scaffold — so the only variables are the **model** and the
 daily closes.
 
 **The field** (`src/modeltraining/tournament/roster.py`, fully editable): a mix
-of 6 Claude contestants (Opus 4.8, Sonnet 5, Haiku 4.5, Fable 5) and 2 OpenAI
-contestants, spread across strategy personas — momentum, value/contrarian,
-macro/news, mean-reversion, systematic, and a buy-and-hold baseline. (Opus 5 is
-left out by default — see the token-efficiency note below.)
+of 5 Claude contestants (Opus 4.8, Sonnet 5 ×2, Haiku 4.5 ×2) and 2 cheap OpenAI
+contestants (GPT-5.6 Terra, Luna), spread across strategy personas — momentum,
+value/contrarian, macro/news, mean-reversion, and a buy-and-hold baseline. The
+priciest models (Opus 5, Fable 5, GPT-5.6 Sol) are left out by default to keep
+token spend down — see the token-efficiency note below.
 
 **Token efficiency:** the buy/sell/hold decision is a small structured call, so
 **thinking is disabled on the decision** for models where it's on by default
@@ -252,16 +253,16 @@ variables* → *Actions*):
 | Secret | Used for |
 |---|---|
 | `ALPACA_API_KEY`, `ALPACA_SECRET_KEY` | reading market data (no orders are placed) |
-| `ANTHROPIC_API_KEY` | the model calls — real spend, capped at **$3/run** by the workflow |
+| `ANTHROPIC_API_KEY` | the 5 Claude contestants |
+| `OPENAI_API_KEY` | the 2 OpenAI contestants |
 
-Then trigger a test run from the **Actions** tab → *Daily tournament* → *Run
-workflow*. Edit the `cron:` line to change the time.
+Real API spend is hard-capped at **$2/run** by the workflow. Then trigger a test
+run from the **Actions** tab → *Daily tournament* → *Run workflow*. Edit the
+`cron:` line to change the time.
 
 Because the Action commits state back to the repo, **the repo is now the single
 source of truth** — don't run `tournament run` locally in parallel (or `git pull`
-first, or you'll fork the standings). The CI field is the **6 Claude models**;
-to include the OpenAI two, add an `OPENAI_API_KEY` secret, add `.[openai]` to the
-install step, verify their model IDs in `roster.py`, and re-init.
+first, or you'll fork the standings).
 
 ### Honest caveats
 

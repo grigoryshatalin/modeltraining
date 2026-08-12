@@ -7,8 +7,10 @@ name: Daily tournament
 # Setup (one time):
 #   Repo -> Settings -> Secrets and variables -> Actions -> New repository secret
 #     ALPACA_API_KEY, ALPACA_SECRET_KEY   (used only to read market data)
-#     ANTHROPIC_API_KEY                    (real API spend, capped below)
-#   Then trigger a test run: Actions tab -> "Daily tournament" -> Run workflow.
+#     ANTHROPIC_API_KEY                    (Claude contestants — real API spend)
+#     OPENAI_API_KEY                       (the 2 OpenAI contestants)
+#   Spend is hard-capped per run below. Then trigger a test run:
+#   Actions tab -> "Daily tournament" -> Run workflow.
 
 on:
   schedule:
@@ -30,8 +32,9 @@ jobs:
       ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
       ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ALPACA_PAPER: "true"
-      TOURNAMENT_MAX_DAILY_SPEND: "3"   # hard cap on real API spend per run
+      TOURNAMENT_MAX_DAILY_SPEND: "2"   # hard cap on real API spend per run
     steps:
       - uses: actions/checkout@v4
 
@@ -40,7 +43,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install
-        run: pip install -e .
+        run: pip install -e '.[openai]'
 
       - name: Run one tournament cycle
         run: modeltraining tournament run
