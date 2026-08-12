@@ -32,28 +32,9 @@ class Contestant:
 
 
 DEFAULT_ROSTER: list[Contestant] = [
-    Contestant(
-        id="opus5-momentum",
-        provider="claude",
-        model="claude-opus-5",
-        research=True,
-        strategy=(
-            "Trend/momentum trader. Favor names making new highs and trading "
-            "above their short- and medium-term moving averages; cut losers "
-            "quickly. Avoid catching falling knives."
-        ),
-    ),
-    Contestant(
-        id="opus5-value",
-        provider="claude",
-        model="claude-opus-5",
-        research=True,
-        strategy=(
-            "Value / contrarian trader. Buy quality that has pulled back toward "
-            "support or below its averages when your research shows the weakness "
-            "is temporary; trim into strength. Patience over activity."
-        ),
-    ),
+    # NOTE: Opus 5 (claude-opus-5) is intentionally left out for now — its
+    # thinking-on-by-default behavior burned tokens on simple decisions. Re-add
+    # it here once you're happy with the cost profile.
     Contestant(
         id="opus48-macro",
         provider="claude",

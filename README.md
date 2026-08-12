@@ -170,7 +170,7 @@ Both share the same prompt (`ai/prompt.py`). To add another provider, implement
 
 ## Model tournament (experiment)
 
-A built-in competition where **10 contestants** each trade a simulated **$100
+A built-in competition where **8 contestants** each trade a simulated **$100
 book**, and the worst performer is eliminated weekly until one remains. Every
 contestant runs the *identical* setup — same watchlist, risk rules, starting
 capital, and prompt scaffold — so the only variables are the **model** and the
@@ -178,9 +178,16 @@ capital, and prompt scaffold — so the only variables are the **model** and the
 daily closes.
 
 **The field** (`src/modeltraining/tournament/roster.py`, fully editable): a mix
-of 8 Claude contestants (Opus 5, Opus 4.8, Sonnet 5, Haiku 4.5, Fable 5) and 2
-OpenAI contestants, spread across strategy personas — momentum, value/contrarian,
-macro/news, mean-reversion, systematic, and a buy-and-hold baseline.
+of 6 Claude contestants (Opus 4.8, Sonnet 5, Haiku 4.5, Fable 5) and 2 OpenAI
+contestants, spread across strategy personas — momentum, value/contrarian,
+macro/news, mean-reversion, systematic, and a buy-and-hold baseline. (Opus 5 is
+left out by default — see the token-efficiency note below.)
+
+**Token efficiency:** the buy/sell/hold decision is a small structured call, so
+**thinking is disabled on the decision** for models where it's on by default
+(Opus 5, Sonnet 5) — otherwise they burn output tokens reasoning about a trivial
+choice. Web research is capped (few searches, short brief), scoring is net of API
+cost, and `TOURNAMENT_MAX_DAILY_SPEND` hard-stops a runaway run.
 
 **Research:** contestants flagged `research=yes` (the Opus/Sonnet Claude models)
 do their **own web research** each day via Claude's web-search tool — pulling

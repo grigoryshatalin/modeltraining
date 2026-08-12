@@ -20,9 +20,27 @@ from ..ai.schema import TradeDecision
 from ..context import MarketContext
 from . import pricing
 
-_DECISION_MAX_TOKENS = 2000
-_RESEARCH_MAX_TOKENS = 2000
-_RESEARCH_MAX_STEPS = 5
+_DECISION_MAX_TOKENS = 1024
+_RESEARCH_MAX_TOKENS = 1500
+_RESEARCH_MAX_STEPS = 4
+_RESEARCH_MAX_SEARCHES = 3
+
+# A buy/sell/hold decision does not need extended reasoning. On models where
+# thinking is on by default (Opus 5, Sonnet 5) that quietly burns output tokens
+# on every call, so we disable it for the decision. Models that can't disable
+# (Fable) or don't think by default (Haiku) are left to their default.
+_CAN_DISABLE_THINKING = {
+    "claude-opus-5",
+    "claude-opus-4-8",
+    "claude-opus-4-7",
+    "claude-opus-4-6",
+    "claude-sonnet-5",
+    "claude-sonnet-4-6",
+}
+
+
+def _decision_thinking(model: str) -> dict | None:
+    return {"type": "disabled"} if model in _CAN_DISABLE_THINKING else None
 
 
 # --------------------------------------------------------------------------- #
@@ -31,7 +49,7 @@ _RESEARCH_MAX_STEPS = 5
 
 def research_claude(client, model: str, symbols: list[str], today: str) -> tuple[str, float]:
     """Let a Claude model search the web and return a short briefing + cost."""
-    tool = {"type": web_search_tool_for(model), "name": "web_search", "max_uses": 5}
+    tool = {"type": web_search_tool_for(model), "name": "web_search", "max_uses": _RESEARCH_MAX_SEARCHES}
     messages = [{"role": "user", "content": research_user(symbols, today)}]
     cost = 0.0
     final = None
@@ -69,13 +87,17 @@ def _decision_user(context: MarketContext, note: str, competitors: str) -> str:
 def decide_claude(
     client, model: str, strategy: str, note: str, context: MarketContext, competitors: str = ""
 ) -> tuple[TradeDecision, float]:
-    resp = client.messages.parse(
+    params = dict(
         model=model,
         max_tokens=_DECISION_MAX_TOKENS,
         system=build_system_prompt(strategy),
         messages=[{"role": "user", "content": _decision_user(context, note, competitors)}],
         output_format=TradeDecision,
     )
+    thinking = _decision_thinking(model)
+    if thinking is not None:
+        params["thinking"] = thinking
+    resp = client.messages.parse(**params)
     cost = pricing.anthropic_call_cost(model, resp.usage)
     decision = resp.parsed_output
     if decision is None:
