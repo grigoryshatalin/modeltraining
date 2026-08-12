@@ -23,8 +23,12 @@ htmlcov/
 
 # Runtime artifacts
 logs/
-state/
 *.log
+
+# Tournament state: ignore local noise, but track the canonical state file so
+# the GitHub Action can persist the tournament across daily runs.
+state/*
+!state/tournament.json
 
 # OS / editor
 .DS_Store

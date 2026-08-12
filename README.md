@@ -239,6 +239,30 @@ State persists in `state/tournament.json` (git-ignored), so run it once a day
   eliminated. `TOURNAMENT_MAX_DAILY_SPEND` (default $5) hard-stops a run if it
   ever exceeds that.
 
+### Hands-off daily runs (GitHub Actions)
+
+`.github/workflows/tournament.yml` runs one cycle each weekday after the US close
+and commits the updated `state/tournament.json` + `leaderboard.json` back to the
+repo — **your computer stays off**. The hosted panel reads `leaderboard.json`
+from `main`, so it just updates.
+
+One-time setup: add three repository secrets (Repo → *Settings* → *Secrets and
+variables* → *Actions*):
+
+| Secret | Used for |
+|---|---|
+| `ALPACA_API_KEY`, `ALPACA_SECRET_KEY` | reading market data (no orders are placed) |
+| `ANTHROPIC_API_KEY` | the model calls — real spend, capped at **$3/run** by the workflow |
+
+Then trigger a test run from the **Actions** tab → *Daily tournament* → *Run
+workflow*. Edit the `cron:` line to change the time.
+
+Because the Action commits state back to the repo, **the repo is now the single
+source of truth** — don't run `tournament run` locally in parallel (or `git pull`
+first, or you'll fork the standings). The CI field is the **6 Claude models**;
+to include the OpenAI two, add an `OPENAI_API_KEY` secret, add `.[openai]` to the
+install step, verify their model IDs in `roster.py`, and re-init.
+
 ### Honest caveats
 
 Over a few weeks this is **dominated by luck and market regime, not skill** — in

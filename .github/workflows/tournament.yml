@@ -1,0 +1,58 @@
+name: Daily tournament
+
+# Runs one tournament cycle each weekday after the US market close, then commits
+# the updated state + leaderboard back to the repo (the hosted panel reads
+# leaderboard.json from the main branch). Your computer does not need to be on.
+#
+# Setup (one time):
+#   Repo -> Settings -> Secrets and variables -> Actions -> New repository secret
+#     ALPACA_API_KEY, ALPACA_SECRET_KEY   (used only to read market data)
+#     ANTHROPIC_API_KEY                    (real API spend, capped below)
+#   Then trigger a test run: Actions tab -> "Daily tournament" -> Run workflow.
+
+on:
+  schedule:
+    - cron: "30 22 * * 1-5"   # 22:30 UTC, Mon-Fri (~after US market close)
+  workflow_dispatch: {}         # manual "Run workflow" button for testing
+
+permissions:
+  contents: write               # allow committing state + leaderboard
+
+concurrency:
+  group: tournament             # never let two cycles run at once
+  cancel-in-progress: false
+
+jobs:
+  cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+      ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      ALPACA_PAPER: "true"
+      TOURNAMENT_MAX_DAILY_SPEND: "3"   # hard cap on real API spend per run
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: pip install -e .
+
+      - name: Run one tournament cycle
+        run: modeltraining tournament run
+
+      - name: Commit updated standings
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state/tournament.json leaderboard.json
+          if git diff --cached --quiet; then
+            echo "Nothing changed; skipping commit."
+          else
+            git commit -m "Tournament cycle $(date -u +%Y-%m-%d)"
+            git push
+          fi
