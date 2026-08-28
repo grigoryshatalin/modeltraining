@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     symbols: str = "AAPL,MSFT,SPY"
     bar_lookback_days: int = 30
 
+    # --- Benchmark (reference line on the public leaderboard) ---
+    benchmark_symbol: str = "SPY"        # S&P 500 proxy ETF; "" disables the reference
+    benchmark_name: str = "S&P 500"
+
     # --- Risk guardrails (USD) ---
     max_trade_notional: float = 1000.0
     max_position_notional: float = 5000.0

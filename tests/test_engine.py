@@ -5,6 +5,7 @@ orchestration (sizing, fills, scoring, state persistence, elimination) with no
 network or API keys.
 """
 
+import json
 from datetime import date, datetime, timedelta, timezone
 
 import modeltraining.tournament.brains as brains
@@ -53,7 +54,10 @@ def _run(engine, monkeypatch, decision_by_id, mark=10.0):
 
 def test_full_cycle_buys_marks_and_persists(tmp_path, monkeypatch):
     path = tmp_path / "t.json"
-    engine = TournamentEngine(_settings(), state_path=path, leaderboard_path=tmp_path / "lb.json")
+    lb_path = tmp_path / "lb.json"
+    engine = TournamentEngine(_settings(), state_path=path, leaderboard_path=lb_path)
+    # Keep the benchmark offline: stub the SPY YTD fetch instead of hitting Alpaca.
+    monkeypatch.setattr(engine._data, "get_ytd_return", lambda sym: 12.345)
     engine.init(roster=_roster())
 
     decisions = {
@@ -63,6 +67,11 @@ def test_full_cycle_buys_marks_and_persists(tmp_path, monkeypatch):
     result = _run(engine, monkeypatch, decisions, mark=10.0)
 
     assert result["day_index"] == 1
+
+    # The published leaderboard carries the S&P 500 YTD benchmark reference.
+    board = json.loads(lb_path.read_text())
+    assert board["benchmark"] == {"name": "S&P 500", "symbol": "SPY", "return_pct": 12.35}
+
     state = TournamentState.load(path)
     buyer = next(c for c in state.contestants if c.id == "buyer")
     holder = next(c for c in state.contestants if c.id == "holder")
@@ -83,6 +92,7 @@ def test_full_cycle_buys_marks_and_persists(tmp_path, monkeypatch):
 def test_weekly_elimination_drops_worst_net(tmp_path, monkeypatch):
     path = tmp_path / "t.json"
     engine = TournamentEngine(_settings(), state_path=path, leaderboard_path=tmp_path / "lb.json")
+    monkeypatch.setattr(engine._data, "get_ytd_return", lambda sym: None)  # stay offline
     engine.init(roster=_roster())
 
     # buyer buys into a rising mark (gains); holder sits in cash (flat, minus API cost)

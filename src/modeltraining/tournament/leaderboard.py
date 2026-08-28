@@ -16,7 +16,7 @@ from .state import TournamentState
 DEFAULT_LEADERBOARD_PATH = Path("leaderboard.json")
 
 
-def build_leaderboard(state: TournamentState) -> dict:
+def build_leaderboard(state: TournamentState, benchmark: dict | None = None) -> dict:
     start = state.starting_capital
     today = datetime.now(timezone.utc).date().isoformat()
     ranked = sorted(state.contestants, key=lambda c: (c.alive, c.net_equity()), reverse=True)
@@ -48,7 +48,7 @@ def build_leaderboard(state: TournamentState) -> dict:
             }
         )
 
-    return {
+    board = {
         "updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "day_index": state.day_index,
         "starting_capital": round(start, 2),
@@ -57,9 +57,18 @@ def build_leaderboard(state: TournamentState) -> dict:
         "total_count": len(state.contestants),
         "agents": agents,
     }
+    # Optional market benchmark (e.g. S&P 500 YTD) — a reference the web panel
+    # renders alongside the agents. Omitted entirely when unavailable.
+    if benchmark is not None:
+        board["benchmark"] = benchmark
+    return board
 
 
-def write_leaderboard(state: TournamentState, path: Path = DEFAULT_LEADERBOARD_PATH) -> Path:
+def write_leaderboard(
+    state: TournamentState,
+    path: Path = DEFAULT_LEADERBOARD_PATH,
+    benchmark: dict | None = None,
+) -> Path:
     path = Path(path)
-    path.write_text(json.dumps(build_leaderboard(state), indent=2) + "\n")
+    path.write_text(json.dumps(build_leaderboard(state, benchmark), indent=2) + "\n")
     return path

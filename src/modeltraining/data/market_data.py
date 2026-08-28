@@ -38,6 +38,28 @@ class MarketDataClient:
         mid = (bid + ask) / 2 if bid and ask else (ask or bid)
         return bid, ask, mid
 
+    def get_ytd_return(self, symbol: str) -> float | None:
+        """Year-to-date % change for `symbol`, priced off the prior year's final
+        close (falling back to this year's first bar when that's all there is).
+        Returns None when no data is available, so a benchmark can never sink a run."""
+        now = datetime.now(timezone.utc)
+        year_start = datetime(now.year, 1, 1, tzinfo=timezone.utc)
+        req = StockBarsRequest(
+            symbol_or_symbols=symbol,
+            timeframe=TimeFrame.Day,
+            start=year_start - timedelta(days=20),  # reach back to the prior-year close
+        )
+        rows = self._client.get_stock_bars(req).data.get(symbol, [])
+        ytd = [b for b in rows if b.timestamp >= year_start]
+        if not ytd:
+            return None
+        prior = [b for b in rows if b.timestamp < year_start]
+        base = float(prior[-1].close) if prior else float(ytd[0].close)
+        last = float(ytd[-1].close)
+        if base <= 0:
+            return None
+        return (last / base - 1) * 100
+
     def get_recent_bars(self, symbol: str, days: int) -> list[Bar]:
         # Pad the calendar window so weekends/holidays still yield ~`days` bars.
         start = datetime.now(timezone.utc) - timedelta(days=days * 2 + 5)

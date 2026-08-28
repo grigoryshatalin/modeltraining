@@ -60,7 +60,7 @@ class TournamentEngine:
             roster=roster,
         )
         state.save(self._path)
-        write_leaderboard(state, self._lb_path)
+        write_leaderboard(state, self._lb_path, self._benchmark())
         return state
 
     def standings(self) -> TournamentState:
@@ -106,7 +106,7 @@ class TournamentEngine:
         state.day_index += 1
         eliminated = self._maybe_eliminate(state, force_eliminate)
         state.save(self._path)
-        write_leaderboard(state, self._lb_path)
+        write_leaderboard(state, self._lb_path, self._benchmark())
 
         return {
             "day_index": state.day_index,
@@ -150,6 +150,21 @@ class TournamentEngine:
                 ) from exc
             clients["openai"] = OpenAI(api_key=self._s.openai_api_key or None)
         return clients
+
+    def _benchmark(self) -> dict | None:
+        """S&P 500 (SPY) YTD reference for the public leaderboard. Never raises —
+        a data hiccup just drops the reference line, it does not sink the run."""
+        sym = self._s.benchmark_symbol
+        if not sym:
+            return None
+        try:
+            pct = self._data.get_ytd_return(sym)
+        except Exception as exc:  # network / data issue must not fail the write
+            log.warning("benchmark %s YTD unavailable: %s", sym, exc)
+            return None
+        if pct is None:
+            return None
+        return {"name": self._s.benchmark_name, "symbol": sym, "return_pct": round(pct, 2)}
 
     def _market_snapshot(self, symbols: list[str]) -> tuple[dict, dict]:
         marks: dict[str, float] = {}
