@@ -150,5 +150,10 @@
       "api_cost": 0.0,
       "last_action": ""
     }
-  ]
+  ],
+  "benchmark": {
+    "name": "S&P 500",
+    "symbol": "SPY",
+    "return_pct": 12.82
+  }
 }
